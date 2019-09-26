@@ -1,27 +1,25 @@
-# Alurapic
+# Angular
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.2.0.
+Esse é um repositório para somente para estudo pessoal, seguindo o exercício proposto pelo curso de Angular da plataforma Alura, do grande professor Flávio Almeida.
 
-## Development server
+A versões usadas no projeto:
+Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
 
-## Code scaffolding
+### Observables
+Os Observables vem do RxJS, são muito poderosos para operações assíncronas, por isso em Angular, por padrão, eles são usados no lugar das promisses. 
+Como os Observables são lazy, eles precisam de um ```subscribe()```, como podemos ver no exemplo de requisição abaixo:
+```
+export class AppComponent {
+  
+  constructor(http: HttpClient){
+    http.get<Object[]>('http://localhost:3000/flavio/photos')
+    .subscribe(photos => this.photos = photos,
+      err => console.log(err)
+    );
+  }
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+  photos: Object[] = [];
 
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+}
+```
