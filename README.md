@@ -25,6 +25,7 @@ export class AppComponent {
 ```
 
 ### Construtor 
+Por convenção, é destinado à injeção de dependências.
 Quando adicionamos o modificador private ou public no parâmetro do constructor da classe, o parâmetro se torna uma propriedade acessível à outros métodos da classe através do ```this```:
 ```
 constructor(private http: HttpClient){}
