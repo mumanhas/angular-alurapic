@@ -8,7 +8,7 @@ Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 
 ### Observables
 Os Observables vem do RxJS, são muito poderosos para operações assíncronas, por isso em Angular, por padrão, eles são usados no lugar das promisses. 
-Como os Observables são lazy, eles precisam de um ```subscribe()```, como podemos ver no exemplo de requisição abaixo:
+Como os Observables são lazy, eles precisam de um ```subscribe()``` para buscar os dados, como podemos ver no exemplo de requisição abaixo:
 ```
 export class AppComponent {
   
@@ -22,4 +22,15 @@ export class AppComponent {
   photos: Object[] = [];
 
 }
+```
+
+### Construtor 
+Por convenção, é destinado à injeção de dependências.
+Quando adicionamos o modificador private ou public no parâmetro do constructor da classe, o parâmetro se torna uma propriedade acessível à outros métodos da classe através do ```this```:
+```
+constructor(private http: HttpClient){}
+
+metodoX() {
+  return this.http
+};
 ```
