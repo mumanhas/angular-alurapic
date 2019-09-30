@@ -20,6 +20,6 @@ export class AppComponent implements OnInit{
       this.photos = photos;
       console.log(photos[0].description)
     })
-
+    
   }
 }
