@@ -5,6 +5,20 @@ Esse é um repositório para somente para estudo pessoal, seguindo o exercício 
 A versões usadas no projeto:
 Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 
+## Lifecycles Hooks
+**OnInit():** Usado na inicialização do component (tomar cuidado com a resposta de chamadas assíncronas);
+
+**OnChanges():** Detectam mudanças nas inbound properties. Quando chamada pelo próprio framework, recebe como parâmetro uma instância de ```SimpleChanges```, um objeto do tipo SimpleChanges possui uma propriedade: photos, de mesmo nome da inbound property que sofreu mudança:
+```
+@Input() photos: Photo[] = [];
+
+ngOnChanges(changes: SimpleChanges) {
+    if(changes.photos)
+        this.rows = this.groupColumns(this.photos);
+}
+
+```
+
 
 ## Observables
 Os Observables vem do RxJS, são muito poderosos para operações assíncronas, por isso em Angular, por padrão, eles são usados no lugar das promisses. 
