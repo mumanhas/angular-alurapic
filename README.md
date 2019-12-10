@@ -6,6 +6,7 @@ A versões usadas no projeto:
 Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 
 ## Lifecycles Hooks
+
 **OnInit():** Usado na inicialização do component (tomar cuidado com a resposta de chamadas assíncronas);
 
 **OnChanges():** Detectam mudanças nas inbound properties. Quando chamada pelo próprio framework, recebe como parâmetro uma instância de ```SimpleChanges```, um objeto do tipo SimpleChanges possui uma propriedade: photos, de mesmo nome da inbound property que sofreu mudança:
@@ -82,6 +83,7 @@ No decorator ```@NgModule()``` declaramosas seguintes propriedades:
 - **imports**: módulos externos que são importados para que os componentes do nosso módulo possam importar-los e usar de suas propriedades. O **BrowserModule** contém uma série de diretivas do Angular entre outras coisas importantes de uso do navegador, como o BrowserModule só pode ser importada no ```app.module.ts```, nos demais módulos importamos o **CommonModule** ```import { CommonModule } from '@angular/common';```, que também contém as diretivas Angular.
 - **exports**: array que declaramos os componentes que estarão acessíveis ao importarem nosso módulo.
 
+## Rotas
 
 ### RountingModule
 Responsável pela controle de rotas de nossa aplicação. Ao perceber que a uma rota com o pathname já definido foi chamada, o Angular intercepta essa chamada, direcionando para o respectivo componente, sem que ocorra uma requisição para o backend, exemplo:
@@ -146,4 +148,39 @@ E agora no componente **PhotoListComponent** que chama o serviço, adiconamos um
 
 A tag ```<router-outlet>``` é a resposável por exibir os componentes de acordo com o rota solicitada.
 
+### Rotas Filhas
+
+Quando criamos um component filho e queremos criar rotas de outros components que pertencem a esse módulo filho, criamos um outro arquivo de rotas: **filho-routing.module.ts**
+
+Nele importamos o ```imports: [RouterModule.forChild(routes)]```no lugar do ```forChild(routes)```:
+```
+const routes: Routes = [
+  
+  {
+    path: 'avo',
+    component: AvoComponent,
+  },
+  {
+    path: 'avo/pai',
+    component: PaiComponent,
+  },
+  {
+    path: 'avo/pai/filho',
+    component: FilhoComponent,
+  }
+```
+Podemos também declarar rotas filhas usando **children** e declarar a diretiva **<router-outlet>** dentro de **AvoComponent.html**, assims os dois components são renderizados. Nosso filho-routing.module.ts ficaria assim:
+```
+  const routes: Routes = [
+  
+    {path: 'avo', component: AvoComponent, children: [
+      {path: '/pai', component: PaiComponent},
+      {path: '/pai/filho', component: FilhoComponent}
+    ]}
+  ];
+  @NgModule({
+    imports: [RouterModule.forChild(routes)],
+    exports: [RouterModule]
+  })
+ ```
 
