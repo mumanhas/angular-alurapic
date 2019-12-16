@@ -5,6 +5,24 @@ Esse é um repositório para somente para estudo pessoal, seguindo o exercício 
 A versões usadas no projeto:
 Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 
+## Sumário
+- [Bindings e Diretivas](#bindings-e-diretivas)
+- [Lifecycles](#lifecycles-hooks)
+- [Observables](#observables)
+- [Constructor](#constructor)
+- [Pipes](#pipes)
+- [Módulos](#módulos)
+- [Rotas](#rotas)
+
+
+## Bindings e Diretivas
+Data Binding: ```[propriedade]``` é one-way, ou seja, a informação vai do component.ts para a view;
+
+Event Binding: ```(click)``` também one-way, inverso, o evento vai da view para o component.ts;
+
+Interpolation: ```{{ propriety }}``` exibe o valor da propriedade em tempo real;
+
+
 ## Lifecycles Hooks
 
 **OnInit():** Usado na inicialização do component (tomar cuidado com a resposta de chamadas assíncronas);
@@ -40,7 +58,7 @@ export class AppComponent {
 ```
 
 
-### Construtor 
+### Constructor 
 Por convenção, é destinado à injeção de dependências.
 Quando adicionamos o modificador private ou public no parâmetro do constructor da classe, o parâmetro se torna uma propriedade acessível à outros métodos da classe através do ```this```:
 ```
@@ -50,6 +68,17 @@ metodoX() {
   return this.http
 };
 ```
+
+
+## Pipes
+Usamos os pipes para transformar dados. Há alguns pipes padrão como por exemplo o ```| uppercase```. Para criarmos um pipe, devemos criar uma classe com o **decorator @Pipe** implementando o metódo **transform()**, com determinada assinatura(parâmetro), criamos **filter-by-description.pipe.ts**:
+```
+@Pipe({ name: 'filterByDescription' })
+export class FiltroPorTitulo implements PipeTransform {
+  transform(photos: Photo[], descriptionQuery: string) {...}
+}
+```
+
 
 ## Módulos
 Usamos os módulos para agrupar componentes com um proprósito de funcionalidade, assim, nosso sistema se torna mais desacoplado, exemplo:
@@ -149,7 +178,6 @@ E agora no componente **PhotoListComponent** que chama o serviço, adiconamos um
 A tag ```<router-outlet>``` é a resposável por exibir os componentes de acordo com o rota solicitada.
 
 ### Rotas Filhas
-
 Quando criamos um component filho e queremos criar rotas de outros components que pertencem a esse módulo filho, criamos um outro arquivo de rotas: **filho-routing.module.ts**
 
 Nele importamos o ```imports: [RouterModule.forChild(routes)]```no lugar do ```forChild(routes)```:
