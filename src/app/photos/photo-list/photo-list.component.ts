@@ -12,6 +12,8 @@ import { Photo } from '../photo/photo';
 export class PhotoListComponent implements OnInit {
 
   photos: Photo[] = [];
+  filter: string = "";
+  nome: string = "Flavio";
 
   constructor(
     private photoService: PhotoService,
@@ -24,7 +26,6 @@ export class PhotoListComponent implements OnInit {
     this.photoService.listFromUser(userName)
     .subscribe(photos => {
       this.photos = photos;
-      console.log(photos[0].description)
     })
     
   }
