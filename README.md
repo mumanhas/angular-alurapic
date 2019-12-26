@@ -57,8 +57,24 @@ export class AppComponent {
 }
 ```
 
+### Subject
+O Subject é um tipo especial de **Observable**, é possível passar parametros, nesse exemplo usamos em conjunto o operador **debounceTime()**, no html: ```(keyup)="debounce.next($event.target.value)"``` e no component.ts:
+```
+export class PhotoListComponent implements OnInit {
+...
+  debounce: Subject<string> = new Subject<string>();
 
-### Constructor 
+  constructor(private activatedRoute: ActivatedRoute) {}
+  
+  ngOnInit(): void {
+    this.photos = this.activatedRoute.snapshot.data.photos;
+    this.debounce
+    .pipe(debounceTime(300))
+    .subscribe(filter => this.filter = filter);
+...
+```
+
+## Constructor 
 Por convenção, é destinado à injeção de dependências.
 Quando adicionamos o modificador private ou public no parâmetro do constructor da classe, o parâmetro se torna uma propriedade acessível à outros métodos da classe através do ```this```:
 ```
@@ -78,7 +94,29 @@ export class FiltroPorTitulo implements PipeTransform {
   transform(photos: Photo[], descriptionQuery: string) {...}
 }
 ```
+## Resolvers
+São usados quando queremos resolver os dados assíncronos usados no component antes dele ser ativado, ou seja, durante a navegação daquela rota, **resolver.ts**:
+```
+@Injectable({ providedIn: 'root' })
+export class PhotoListResolver implements Resolve<Observable<Photo[]>> {
 
+  constructor(private service: PhotoService) {}
+
+  resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<Photo[]> {
+    const userName = route.params.userName;
+    return this.service.listFromUser(userName);
+  }
+
+}
+```
+No **routing.module.ts**:
+```
+path: 'user/:userName',
+component: PhotoListComponent,
+resolve: { 
+  photos: PhotoListResolver
+} 
+```
 
 ## Módulos
 Usamos os módulos para agrupar componentes com um proprósito de funcionalidade, assim, nosso sistema se torna mais desacoplado, exemplo:
