@@ -16,12 +16,15 @@ Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 
 
 ## Bindings e Diretivas
-Data Binding: ```[propriedade]``` é one-way, ou seja, a informação vai do component.ts para a view;
+**Data Binding:** ```[propriedade]``` é one-way, ou seja, a informação vai do component.ts para a view;
 
-Event Binding: ```(click)``` também one-way, inverso, o evento vai da view para o component.ts;
+**Event Binding:** ```(click)``` também one-way, inverso, o evento vai da view para o component.ts;
 
-Interpolation: ```{{ propriety }}``` exibe o valor da propriedade em tempo real;
+**Interpolation:** ```{{ propriety }}``` exibe o valor da propriedade em tempo real;
 
+**Inbound Properties:** ```@Input ()```  antes da propriedade, e conseguimos definir seu valor através de outro component;
+
+**If/Else:** ```*ngIf=" condicaoX; else Y ``` o conteúdo de else deve ficar entre a diretiva e ser nomeada usando uma variável de template: ```<ng-template #Y>```
 
 ## Lifecycles Hooks
 
