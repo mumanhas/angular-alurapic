@@ -16,15 +16,17 @@ Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 
 
 ## Bindings e Diretivas
-**Data Binding:** ```[propriedade]``` é one-way, ou seja, a informação vai do component.ts para a view;
+- **Data Binding:** ```[propriedade]``` é one-way, ou seja, a informação vai do component.ts para a view;
 
-**Event Binding:** ```(click)``` também one-way, inverso, o evento vai da view para o component.ts;
+- **Event Binding:** ```(click)``` também one-way, inverso, o evento vai da view para o component.ts;
 
-**Interpolation:** ```{{ propriety }}``` exibe o valor da propriedade em tempo real;
+- **Interpolation:** ```{{ propriety }}``` exibe o valor da propriedade em tempo real;
 
-**Inbound Properties:** ```@Input ()```  antes da propriedade, e conseguimos definir seu valor através de outro component;
+- **Inbound Properties:** ```@Input ()```  antes da propriedade, e conseguimos definir seu valor através de outro component;
 
-**If/Else:** ```*ngIf=" condicaoX; else Y ``` o conteúdo de else deve ficar entre a diretiva e ser nomeada usando uma variável de template: ```<ng-template #Y>```
+- **If/Else:** ```*ngIf=" condicaoX; else Y ``` o conteúdo de else deve ficar entre a diretiva e ser nomeada usando uma variável de template: ```<ng-template #Y>```;
+
+- **Content:** usamos a diretiva ```<ng-content>``` no template do nosso component para quando utilizar-lo em outro component, o contéudo declarado dentro do seu seletor apareça.
 
 ## Lifecycles Hooks
 
@@ -148,10 +150,12 @@ import { PhotoListComponent } from './photo-list/photo-list.component';
 
 export class PhotosModule {}
 ```
-No decorator ```@NgModule()``` declaramosas seguintes propriedades:
+No decorator ```@NgModule()``` declaramos as seguintes propriedades:
 - **declarations**: array que declaramos todos os componentes que compõem nosso módulo.
 - **imports**: módulos externos que são importados para que os componentes do nosso módulo possam importar-los e usar de suas propriedades. O **BrowserModule** contém uma série de diretivas do Angular entre outras coisas importantes de uso do navegador, como o BrowserModule só pode ser importada no ```app.module.ts```, nos demais módulos importamos o **CommonModule** ```import { CommonModule } from '@angular/common';```, que também contém as diretivas Angular.
 - **exports**: array que declaramos os componentes que estarão acessíveis ao importarem nosso módulo.
+
+É importante lembrar que um Component só pode ser importado uma única vez, então o declaramos e importamos em um Módulo para que possar ser usados por outros.
 
 ## Rotas
 
