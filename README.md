@@ -7,6 +7,7 @@ Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 
 ## Sumário
 - [Bindings e Diretivas](#bindings-e-diretivas)
+- [Decorators](#decorators)
 - [Lifecycles](#lifecycles-hooks)
 - [Observables](#observables)
 - [Constructor](#constructor)
@@ -22,11 +23,44 @@ Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 
 - **Interpolation:** ```{{ propriety }}``` exibe o valor da propriedade em tempo real;
 
-- **Inbound Properties:** ```@Input ()```  antes da propriedade, e conseguimos definir seu valor através de outro component;
+- **Inbound Property:** ```@Input()```  antes da propriedade, e conseguimos definir seu valor através de outro component (pai para o filho);
+
+- **Output Property:** ```@Output()``` antes da propriedade, ela deve ser uma instância de EventEmmiter: ```@Output() onTyping = new EventEmitter<string>()```, assim, é possível a comunicação do component (filho para o pai);
 
 - **If/Else:** ```*ngIf=" condicaoX; else Y ``` o conteúdo de else deve ficar entre a diretiva e ser nomeada usando uma variável de template: ```<ng-template #Y>```;
 
 - **Content:** usamos a diretiva ```<ng-content>``` no template do nosso component para quando utilizar-lo em outro component, o contéudo declarado dentro do seu seletor apareça.
+
+### Criando Diretivas
+Toda diretiva, no seu estado bruto, é um component sem template. Vamos criar a diretiva **darken-on-hover.directive.ts**:
+```
+export class DarkenOnHoverDirective {
+
+    @Input() brightness = '70%';
+
+    constructor(
+        private el: ElementRef,
+        private render: Renderer
+    ) {}
+
+    @HostListener('mouseover')
+    darkenOn() {
+        this.render.setElementStyle(this.el.nativeElement, 'filter', `brightness(${this.brightness})`);
+    }
+    @HostListener('mouseleave')
+    darkenOff() {
+        this.render.setElementStyle(this.el.nativeElement, 'filter', 'brightness(100%)');
+    }
+}
+```
+Nesse caso, nossa diretiva custom está diminuindo o brilho do elemento em que o mouse passa, para isso usamos o **Render**, um módulo que nos permite manipular o DOM sem termos que digitar o que queremos fazer.
+Observe também que nossa diretiva também pode receber uma **Inbound Property** onde ajustaremos o brilho diretamente no template em photos-list.component.html:
+```
+    <div *ngFor="let photo of cols" class="col-4" apDarkenOnHover brightness='80%'>
+```
+
+## Decorators
+- **@HostListener** do pacote core. Passamos a ele o evento do elemento hospedeiro ao qual queremos responder, no qual a diretiva está sendo colocada: ```@HostListener('mouseover')```.
 
 ## Lifecycles Hooks
 
