@@ -14,6 +14,7 @@ Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 - [Pipes](#pipes)
 - [Módulos](#módulos)
 - [Rotas](#rotas)
+- [Forms e Validação](#forms)
 
 
 ## Bindings e Diretivas
@@ -186,8 +187,8 @@ export class PhotosModule {}
 ```
 No decorator ```@NgModule()``` declaramos as seguintes propriedades:
 - **declarations**: array que declaramos todos os componentes que compõem nosso módulo.
-- **imports**: módulos externos que são importados para que os componentes do nosso módulo possam importar-los e usar de suas propriedades. O **BrowserModule** contém uma série de diretivas do Angular entre outras coisas importantes de uso do navegador, como o BrowserModule só pode ser importada no ```app.module.ts```, nos demais módulos importamos o **CommonModule** ```import { CommonModule } from '@angular/common';```, que também contém as diretivas Angular.
-- **exports**: array que declaramos os componentes que estarão acessíveis ao importarem nosso módulo.
+- **imports**: somente módulos externos que são importados para que os componentes do nosso módulo possam importar-los e usar de suas propriedades. O **BrowserModule** contém uma série de diretivas do Angular entre outras coisas importantes de uso do navegador, como o BrowserModule só pode ser importada no ```app.module.ts```, nos demais módulos importamos o **CommonModule** ```import { CommonModule } from '@angular/common';```, que também contém as diretivas Angular.
+- **exports**: array que declaramos os componentes que estarão acessíveis ao importarem nosso módulo (somente exportamos um component quando pretendemos usa-lo no template de um outro componente).
 
 É importante lembrar que um Component só pode ser importado uma única vez, então o declaramos e importamos em um Módulo para que possar ser usados por outros.
 
@@ -290,4 +291,58 @@ Podemos também declarar rotas filhas usando **children** e declarar a diretiva 
     exports: [RouterModule]
   })
  ```
+
+ ## Forms e Validação
+
+ Para validação podemos utilizar o **Model Driven Forms**, cuja regra de validação ficará no componente, e não no template. Para isso, vamos importar o **ReactiveFormsModule** do @angular/forms.
+ No component, criamos uma propriedade loginForm, do tipo **FormGroup** que será usada no template para identificar o formulário.
+ Também usamos o **FormBuilder**, responsável por criar a abstração do nosso form junto com seus inputs através do método ```.group```. No array dos inputs, passamos o valor inicial do input e usamos o **Validators** para a validação obrigatória: ```userName: ['', Validators.required]```, no signin.component.ts:
+ ```
+@Component({
+  templateUrl: './signin.component.html'
+})
+
+export class SigninComponent {
+
+  loginForm: FormGroup;
+
+  constructor(
+    private formBuilder: FormBuilder
+  ) { }
+
+  ngOnInit(): void {
+    this.loginForm = this.formBuilder.group({
+        userName: ['', Validators.required],
+        password: ['', Validators.required]
+    });
+}
+````
+Já no nosso template, podemos ver o uso da diretiva ```[formGroup]```, identificando nosso formulário.
+Também temos propriedade ```formControlName="userName"``` que identifica os inputs conforme nosso formBuilder.group do component.
+Detalhe para o uso do **Safe Operator**: ```*ngIf="loginForm.get('userName').errors?.required"```, onde ele verifica a existencia de ```.errors?``` antes de prosseguir. Nosso signin.component.html:
+```
+<h4 class="text-center">Login</h4>
+
+<form [formGroup]="loginForm" class="form mt-4">
+
+    <div class="form-group">
+        <input
+        formControlName="userName"
+        class="form-control"
+        placeholder="user name"
+        autofocus>
+        <small
+            *ngIf="loginForm.get('userName').errors?.required"
+            class="text-danger d-block mt-2">
+            User name is required!
+        </small>
+    </div>
+...
+```
+ 
+ Por último, usamos a diretiva ```[disabled]``` para quando houver o descumprimento de uma regra do Validators:
+ ```
+ <button [disabled]="loginForm.invalid" type="submit" class="btn btn-primary btn-block">login</button>
+ ```
+ 
 
