@@ -14,7 +14,7 @@ Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 - [Pipes](#pipes)
 - [Módulos](#módulos)
 - [Rotas](#rotas)
-- [Forms e Validação](#forms)
+- [Forms e Validação](#forms-e-validação)
 
 
 ## Bindings e Diretivas
