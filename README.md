@@ -194,6 +194,10 @@ No decorator ```@NgModule()``` declaramos as seguintes propriedades:
 
 ## Rotas
 
+Existem duas formas de redirecionar o usuário para rotas da nossa aplicação:
+Concatenando:```this.router.navigateByUrl('user/' + userName)```;
+Parametrizando:```this.router.navigate(['user', userName])```;
+
 ### RountingModule
 Responsável pela controle de rotas de nossa aplicação. Ao perceber que a uma rota com o pathname já definido foi chamada, o Angular intercepta essa chamada, direcionando para o respectivo componente, sem que ocorra uma requisição para o backend, exemplo:
 ```
@@ -292,7 +296,7 @@ Podemos também declarar rotas filhas usando **children** e declarar a diretiva 
   })
  ```
 
- ## Forms e Validação
+## Forms e Validação
 
  Para validação podemos utilizar o **Model Driven Forms**, cuja regra de validação ficará no componente, e não no template. Para isso, vamos importar o **ReactiveFormsModule** do @angular/forms.
  No component, criamos uma propriedade loginForm, do tipo **FormGroup** que será usada no template para identificar o formulário.
