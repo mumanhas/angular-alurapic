@@ -377,7 +377,7 @@ Detalhe para o uso do **Safe Operator**: ```*ngIf="loginForm.get('userName').err
  
 ## Autenticação
 
-Uma forma de obter o tolken retornado pelo backend é passando um terceiro parametro para o post: ```{ observe: 'response'} ``` e usar o pipe e o tap (um operador do rxjs) para trabalhar com  resposta, assim nosso **auth.service.ts** fica:
+Uma forma de obter o token retornado pelo backend é passando um terceiro parametro para o post: ```{ observe: 'response'} ``` e usar o pipe e o tap (um operador do rxjs) para trabalhar com  resposta, assim nosso **auth.service.ts** fica:
 ```
 return this.http
     .post(
@@ -390,4 +390,36 @@ return this.http
         console.log(`User ${userName} authenticated with token ${authToken}`);
     }));
 ```
+
+Podemos armazenar o token no LocalStorage do navegador, para isso criaremos o serviço **token.service.ts**:
+```
+import { Injectable } from '@angular/core';
+
+const KEY = 'authToken';
+
+@Injectable({ providedIn: 'root' })
+export class TokenService {
+
+    hasToken() {
+        return this.getToken();
+    }
+
+    setToken(token) {
+        window.localStorage.setItem(KEY, token);
+    }
+
+    getToken() {
+        return window.localStorage.getItem(KEY);
+    }
+
+    removeToken() {
+        window.localStorage.removeItem(KEY);
+    }
+}
+```
+E usaremos o método setToken quando o usuário logar, no **auth.service.ts**.
+
+No projeto para seguranca do token foi usado o JWT (Json Web Token).
+```npm install jwt-decode@2.2.0``` é módulo auxiliará neste processo de captura do valor localizado no Payload do JWT.
+
 
