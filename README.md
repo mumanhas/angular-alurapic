@@ -119,6 +119,11 @@ export class PhotoListComponent implements OnInit {
     .subscribe(filter => this.filter = filter);
 ...
 ```
+Decaclarar a váriavel com ```$``` no final é boa prática para quando se usa um Observable.
+
+### BehaviorSubject
+O BehaviorSubject armazena a última emissão até que alguém apareça para consumi-la, ou seja, não corre o risco de emitir o valor enquanto quem vá consumi-lo o perca por ainda não estar carregado. Passamos por parametro o valor que vai emitir default:
+```private userSubject = new BehaviorSubject<User>(null);```
 
 ## Constructor 
 Por convenção, é destinado à injeção de dependências.
