@@ -145,6 +145,10 @@ export class FiltroPorTitulo implements PipeTransform {
   transform(photos: Photo[], descriptionQuery: string) {...}
 }
 ```
+Com o Async pipe conseguimos capturar a emissão do Observable diretamente do nosso template:
+```<div *ngIf="(user$ | async) as user; else login">```
+
+
 ## Resolvers
 São usados quando queremos resolver os dados assíncronos usados no component antes dele ser ativado, ou seja, durante a navegação daquela rota, **resolver.ts**:
 ```
