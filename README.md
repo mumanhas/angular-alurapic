@@ -13,8 +13,10 @@ Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 - [Constructor](#constructor)
 - [Pipes](#pipes)
 - [Módulos](#módulos)
+- [Serviços](#serviços)
 - [Rotas](#rotas)
-- [Forms e Validação](#forms)
+- [Forms e Validação](#forms-e-validação)
+- [Autenticação](#autenticação) 
 
 
 ## Bindings e Diretivas
@@ -27,6 +29,8 @@ Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 - **Inbound Property:** ```@Input()```  antes da propriedade, e conseguimos definir seu valor através de outro component (pai para o filho);
 
 - **Output Property:** ```@Output()``` antes da propriedade, ela deve ser uma instância de EventEmmiter: ```@Output() onTyping = new EventEmitter<string>()```, assim, é possível a comunicação do component (filho para o pai);
+
+- **ViewChild:** ```@ViewChild('userNameInput') userNameInput: ElementRef<HTMLInputElement>;``` é uma comunicação do pai com o elemento filho, através de uma variável de template ```<input #userNameInput```, assim o ElementRef funciona como um wrapper do elemento alvo do DOM.
 
 - **If/Else:** ```*ngIf=" condicaoX; else Y ``` o conteúdo de else deve ficar entre a diretiva e ser nomeada usando uma variável de template: ```<ng-template #Y>```;
 
@@ -62,6 +66,8 @@ Observe também que nossa diretiva também pode receber uma **Inbound Property**
 
 ## Decorators
 - **@HostListener** do pacote core. Passamos a ele o evento do elemento hospedeiro ao qual queremos responder, no qual a diretiva está sendo colocada: ```@HostListener('mouseover')```.
+
+- **@Inject()** é um mecanismo geralmente utilizado no construtor de uma classe que permite especificar que o parâmetro inserido deve ser injetado.
 
 ## Lifecycles Hooks
 
@@ -113,6 +119,11 @@ export class PhotoListComponent implements OnInit {
     .subscribe(filter => this.filter = filter);
 ...
 ```
+Decaclarar a váriavel com ```$``` no final é boa prática para quando se usa um Observable.
+
+### BehaviorSubject
+O BehaviorSubject armazena a última emissão até que alguém apareça para consumi-la, ou seja, não corre o risco de emitir o valor enquanto quem vá consumi-lo o perca por ainda não estar carregado. Passamos por parametro o valor que vai emitir default:
+```private userSubject = new BehaviorSubject<User>(null);```
 
 ## Constructor 
 Por convenção, é destinado à injeção de dependências.
@@ -134,6 +145,10 @@ export class FiltroPorTitulo implements PipeTransform {
   transform(photos: Photo[], descriptionQuery: string) {...}
 }
 ```
+Com o Async pipe conseguimos capturar a emissão do Observable diretamente do nosso template:
+```<div *ngIf="(user$ | async) as user; else login">```
+
+
 ## Resolvers
 São usados quando queremos resolver os dados assíncronos usados no component antes dele ser ativado, ou seja, durante a navegação daquela rota, **resolver.ts**:
 ```
@@ -192,7 +207,31 @@ No decorator ```@NgModule()``` declaramos as seguintes propriedades:
 
 É importante lembrar que um Component só pode ser importado uma única vez, então o declaramos e importamos em um Módulo para que possar ser usados por outros.
 
+## Serviços
+
+Diferentemente de dos components, os serviços não precisam pertencer a um módulo. Usam o decorator @Injectable e no nosso exemplo, uma instância global já que seu **providedIn é root**.
+No exemplo, nosso serviço identifica em qual plataforma está sendo executado o projeto(navegador: client-side ou server-side), através do **PLATFORM_ID, que é um InjectionTolken**:
+```
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+
+@Injectable({ providedIn: 'root' })
+export class PlataformDetectorService {
+
+  constructor(@Inject(PLATFORM_ID) private platformId: string) {}
+
+  isPlatformBrowser() {
+    return isPlatformBrowser(this.platformId)
+  }
+  
+}
+```
+
 ## Rotas
+
+Existem duas formas de redirecionar o usuário para rotas da nossa aplicação:
+Concatenando:```this.router.navigateByUrl('user/' + userName)```;
+Parametrizando:```this.router.navigate(['user', userName])```;
 
 ### RountingModule
 Responsável pela controle de rotas de nossa aplicação. Ao perceber que a uma rota com o pathname já definido foi chamada, o Angular intercepta essa chamada, direcionando para o respectivo componente, sem que ocorra uma requisição para o backend, exemplo:
@@ -292,7 +331,7 @@ Podemos também declarar rotas filhas usando **children** e declarar a diretiva 
   })
  ```
 
- ## Forms e Validação
+## Forms e Validação
 
  Para validação podemos utilizar o **Model Driven Forms**, cuja regra de validação ficará no componente, e não no template. Para isso, vamos importar o **ReactiveFormsModule** do @angular/forms.
  No component, criamos uma propriedade loginForm, do tipo **FormGroup** que será usada no template para identificar o formulário.
@@ -345,4 +384,51 @@ Detalhe para o uso do **Safe Operator**: ```*ngIf="loginForm.get('userName').err
  <button [disabled]="loginForm.invalid" type="submit" class="btn btn-primary btn-block">login</button>
  ```
  
+## Autenticação
+
+Uma forma de obter o token retornado pelo backend é passando um terceiro parametro para o post: ```{ observe: 'response'} ``` e usar o pipe e o tap (um operador do rxjs) para trabalhar com  resposta, assim nosso **auth.service.ts** fica:
+```
+return this.http
+    .post(
+        API_URL + '/user/login', 
+        { userName, password }, 
+        { observe: 'response'} 
+    )
+    .pipe(tap(res => {
+        const authToken = res.headers.get('x-access-token')
+        console.log(`User ${userName} authenticated with token ${authToken}`);
+    }));
+```
+
+Podemos armazenar o token no LocalStorage do navegador, para isso criaremos o serviço **token.service.ts**:
+```
+import { Injectable } from '@angular/core';
+
+const KEY = 'authToken';
+
+@Injectable({ providedIn: 'root' })
+export class TokenService {
+
+    hasToken() {
+        return this.getToken();
+    }
+
+    setToken(token) {
+        window.localStorage.setItem(KEY, token);
+    }
+
+    getToken() {
+        return window.localStorage.getItem(KEY);
+    }
+
+    removeToken() {
+        window.localStorage.removeItem(KEY);
+    }
+}
+```
+E usaremos o método setToken quando o usuário logar, no **auth.service.ts**.
+
+No projeto para seguranca do token foi usado o JWT (Json Web Token).
+```npm install jwt-decode@2.2.0``` é módulo auxiliará neste processo de captura do valor localizado no Payload do JWT.
+
 
