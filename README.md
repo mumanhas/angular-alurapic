@@ -17,6 +17,8 @@ Angular: 7.2.15 / Angular CLI: 7.2.4 / Node: 10.15.2
 - [Rotas](#rotas)
 - [Forms e Validação](#forms-e-validação)
 - [Autenticação](#autenticação) 
+- [Build](#build)
+- [Lazyloading e Codesplitting](#lazyloading-e-codesplitting)
 
 
 ## Bindings e Diretivas
@@ -200,6 +202,7 @@ import { PhotoListComponent } from './photo-list/photo-list.component';
 
 export class PhotosModule {}
 ```
+
 No decorator ```@NgModule()``` declaramos as seguintes propriedades:
 - **declarations**: array que declaramos todos os componentes que compõem nosso módulo.
 - **imports**: somente módulos externos que são importados para que os componentes do nosso módulo possam importar-los e usar de suas propriedades. O **BrowserModule** contém uma série de diretivas do Angular entre outras coisas importantes de uso do navegador, como o BrowserModule só pode ser importada no ```app.module.ts```, nos demais módulos importamos o **CommonModule** ```import { CommonModule } from '@angular/common';```, que também contém as diretivas Angular.
@@ -227,11 +230,92 @@ export class PlataformDetectorService {
 }
 ```
 
+Quando um service é usado apenas num modulo e não desejamos que ele tenha escopo global, removemos o root do seu @Injectable: ```@Injectable()``` e no component que o service é usado, adicionaremos como provider:
+```
+@Component({
+  templateUrl: './signup.component.html',
+  providers: [ UserNotTakenValidatorService ]
+})
+``` 
+E no módulo temos que que adicionar o serviço como provider também:
+```
+imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    VMessageModule,
+    RouterModule,
+    HomeRoutingModule
+],
+providers: [
+    SignUpService
+]
+````
+
+### Intereceptors
+Um interceptor nos permite de forma bem simples interceptar e configurar requisições antes delas serem disparadas para o servidor.
+Criamos um interceptor **request.interceptor.ts** responsável por guardar o token da autenticação e envia-lo em toda requisição para o back-end:
+```
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
+import { TokenService } from '../token/token.service';
+import { Injectable } from '@angular/core';
+
+@Injectable()
+export class RequestInterceptor implements HttpInterceptor {
+
+  constructor(private tokenService: TokenService) {}
+
+  intercept(req: HttpRequest<any>, next: HttpHandler):import("rxjs").Observable<HttpEvent<any>> {
+
+      if(this.tokenService.hasToken()) {
+        const token = this.tokenService.getToken();
+        req = req.clone({
+          setHeaders: {
+            'x-access-token': token
+          }
+        })
+      }
+      
+      return next.handle(req);
+  }
+}
+```
+
+e no **core.module.ts** adicionaremos como provider:
+```
+import { NgModule } from '@angular/core';
+import { HeaderComponent } from './header/header.component';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { RequestInterceptor } from './auth/request.interceptor';
+
+@NgModule({
+  declarations: [HeaderComponent],
+  exports: [HeaderComponent],
+  imports: [
+    CommonModule,
+    RouterModule
+  ],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: RequestInterceptor,
+      multi: true
+    }
+  ]
+})
+
+export class CoreModule {}
+```
+
 ## Rotas
 
 Existem duas formas de redirecionar o usuário para rotas da nossa aplicação:
 Concatenando:```this.router.navigateByUrl('user/' + userName)```;
 Parametrizando:```this.router.navigate(['user', userName])```;
+
+A diretiva **routerLink]="['']"** é o modo correto de redirecionar para uma rota, quando usando ```<a>``` a página é regarregada, perdendo todo o poder de uma SPA.
 
 ### RountingModule
 Responsável pela controle de rotas de nossa aplicação. Ao perceber que a uma rota com o pathname já definido foi chamada, o Angular intercepta essa chamada, direcionando para o respectivo componente, sem que ocorra uma requisição para o backend, exemplo:
@@ -331,6 +415,42 @@ Podemos também declarar rotas filhas usando **children** e declarar a diretiva 
   })
  ```
 
+ ### Guardas de Rotas 
+
+Criando ```auth.guard.ts```, importaremos a interface CanActivate:
+```
+@Injectable({ providedIn: 'root'})
+export class AuthGuard implements CanActivate {
+
+  constructor (
+    private userService: UserService,
+    private router: Router
+  ) {}
+
+  canActivate(
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): boolean | Observable<boolean> | Promise<boolean> {
+      if(this.userService.isLogged()){
+        this.router.navigate(['user', this.userService.getUserName()]);
+        return false;
+      }
+      return true;
+  }
+}
+```
+No arquivo de rotas colocamos nosso guard:
+```
+...
+const routes: Routes = [
+  {
+    path: '',
+    component: SigninComponent,
+    canActivate: [AuthGuard]
+  },
+...
+```
+
 ## Forms e Validação
 
  Para validação podemos utilizar o **Model Driven Forms**, cuja regra de validação ficará no componente, e não no template. Para isso, vamos importar o **ReactiveFormsModule** do @angular/forms.
@@ -383,7 +503,112 @@ Detalhe para o uso do **Safe Operator**: ```*ngIf="loginForm.get('userName').err
  ```
  <button [disabled]="loginForm.invalid" type="submit" class="btn btn-primary btn-block">login</button>
  ```
- 
+
+ A classe **FormGroup** disponibiliza uma série de funcionalidades, os principais métodos:
+
+- ```setValue(value: {...}, options: {...}): void``` (Setar os valores do formulário através de um objeto.)
+
+- ```contains(controlName: string): boolean``` (Verificar se o formulário tem um determinado campo através do respectivo controlName).
+
+- ```getRawValue()```(Obter um objeto com os valores do fomrlário)
+
+ ### Validadores Custom
+ Para criar um validador custom, criamos na pasta **shared** o ```lower-case.validator.ts```, que é uma função que sempre recebe como parâmetro ```control: AbstractControl```:
+ ```
+import { AbstractControl } from '@angular/forms';
+
+export function lowerCaseValidator(control: AbstractControl) {
+
+  if(control.value.trim() && !/ˆ[a-z0-9_\-]+$/.test(control.value)){
+    return { lowerCase: true }
+  }
+  return null
+}
+```
+Depois, no ```signup.component.ts``` podemos adiciona-lo à validação:
+```
+...
+export class SignupComponent implements OnInit {
+
+  signupForm: FormGroup;
+
+  constructor(private formBuilder: FormBuilder){}
+
+  ngOnInit(): void {
+    this.signupForm = this.formBuilder.group({
+      userName: ['',
+        [
+          Validators.required,
+          lowerCaseValidator,
+          Validators.minLength(2),
+          Validators.maxLength(30)
+        ]
+      ],
+    ...
+ ```
+ E finalmente chamar no template do signup.component.html:
+ ```
+ ...
+     <div class="form-group">
+        <input 
+        formControlName="userName"
+        placeholder="user name" 
+        class="form-control">
+        <ap-vmessage
+            *ngIf="signupForm.get('userName').errors?.lowerCase"
+            text="Must be lowercase!">
+        </ap-vmessage>
+    </div>
+...
+```
+
+###Validadores Assíncronos
+Criando um validador assincrono que valida se o userName já é cadastrado:
+```
+import { Injectable } from '@angular/core';
+import { SignUpService } from './signup.service';
+import { AbstractControl } from '@angular/forms';
+import { debounceTime, switchMap, map, first } from 'rxjs/operators';
+
+@Injectable ( { providedIn: 'root' })
+export class UserNotTakerValidatorService {
+
+  constructor(private signUpService: SignUpService) {}
+
+  checkUserNameTaken() {
+    return (control: AbstractControl) => {
+
+      return control
+        .valueChanges
+        .pipe(debounceTime(300))
+        .pipe(switchMap(userName =>
+          this.signUpService.checkUserNameTaken(userName)
+        ))
+        .pipe(map(isTaken => isTaken ? { userNameTaken: true } : null))
+        .pipe(first());    
+    }
+  }
+
+}
+```
+No ```signup.component.ts``` ele entra como terceiro elemento do array do Validators:
+```
+...
+  userName: ['',
+    [
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(30),
+      //lowerCaseValidator
+    ],
+    this.userNotTakenValidatorService.checkUserNameTaken()
+  ],
+...
+```
+
+E por fim é importante declarar o **.peding** no botão enviar do template:
+```<button [disabled]="signupForm.invalid || signupForm.pending">Enviar</button>```
+
 ## Autenticação
 
 Uma forma de obter o token retornado pelo backend é passando um terceiro parametro para o post: ```{ observe: 'response'} ``` e usar o pipe e o tap (um operador do rxjs) para trabalhar com  resposta, assim nosso **auth.service.ts** fica:
@@ -426,9 +651,90 @@ export class TokenService {
     }
 }
 ```
+
 E usaremos o método setToken quando o usuário logar, no **auth.service.ts**.
 
 No projeto para seguranca do token foi usado o JWT (Json Web Token).
 ```npm install jwt-decode@2.2.0``` é módulo auxiliará neste processo de captura do valor localizado no Payload do JWT.
+
+## Build
+
+Ao exercutar o comando ```ng build --prod``` no terminal, o Angular se encarrega de aplicar
+várias técnicas de otimização para gerar o projeto, os artefatos estarão dentro da pasta **/dist**.
+
+Um fato a ser levado em conta quando configuramos as rotas da aplicação é que o Angular utiliza o que chamamos de HTML5 mode, o **History API** do navegador, para que seja possível trabalhar com URLs sem a necessidade do #. 
+Uma vez que o hash não dispara o carregamento na mudança do location, no back end, o Angular o intercepta e extrai a informação, detectando qual component deve ser carregado. 
+O back end cujo Angular é hospedado precisa estar programado para que qualquer requisição feita para ele devolva index.html, caso isso não seja feito, é preciso configurarmos as rotas com hashtag: no arquivo de rotas **app.rounting.module.ts**:
+```
+@NgModule({
+  imports: [
+      RouterModule.forRoot(routes, { useHash: true } )
+  ],
+  exports: [ RouterModule ]
+})
+```
+
+## Lazyloading e Codesplitting
+
+Após o build do projeto, um dos artefatos gerados é o **main**, nele estão todos nossos componentes. Ao carregar a página, o usuário terá que fazer o download disso tudo, e, é uma boa prática dividirmos em partes**(chunks)** para que se faça o download conforme a demanda, essa é uma tecnica conhecida como **Code splitting**.
+O lazyloading é fazermos com que essas partes do módulo sejam carregados apenas quando o usuário acessar as rotas em que são usados.
+Aplicando o Lazy Loading no HomeComponent, a propriedade ```pathMatch: 'full'``` é adicionada, se não, qualquer rota que começar com ```/``` será considerada e o **loadChildren** indica o módulo que sera carregado sob demanda (#HomeModule é o nome colocado em  home.module.ts), nosso app.routing.module.ts fica assim:
+```
+...
+const routes: Routes = [
+  {
+      path: '',
+      pathMatch: 'full',
+      redirectTo: 'home'
+  },
+  {
+      path: 'home',
+      loadChildren: './home/home.module#HomeModule'
+  },
+...
+```
+
+ Criamos o **home.routing.module.ts**, que é o responsável pelo gerenciamento de rotas:
+```
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router'; 
+import { HomeComponent } from './home.component';
+import { AuthGuard } from '../core/auth/auth.guard';
+import { SigninComponent } from './signin/signin.component';
+import { SignupComponent } from './signup/signup.component';
+
+const routes: Routes = [
+  {
+    path: '',
+    component: HomeComponent,
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: '',
+        component: SigninComponent,
+      },
+      {
+        path: 'signup',
+        component: SignupComponent
+      },
+    ] 
+  }
+]
+
+@NgModule({
+  imports: [ 
+    RouterModule.forChild(routes) 
+  ],
+  exports: [ RouterModule ]
+})
+
+export class HomeRoutingModule {}
+```
+
+Devemos usar o ```RouterModule.forChild```no momento em que formos compilar as rotas para dentro do módulo.
+Note que trazemos todos os imports dos Components pertinentes e removemos de app.routing.module.ts.
+Outro ponto importante é que, se queremos carregar um módulo preguiçosamente, **ele não pode ser importado em app.module.ts**
+
+
 
 
